@@ -45,6 +45,7 @@ def star(input_file, output_file):
     --genomeDir %(star_ref)s
     --readFilesIn %(input_file)s 
     --readFilesCommand zcat
+    --outStd SAM
     --outSAMunmapped Within
     --outFileNamePrefix %(outprefix)s_
     | samtools view -bu | samtools sort -@ %(star_threads)s -o %(output_file)s'''
