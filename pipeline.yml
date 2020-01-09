@@ -12,7 +12,7 @@ star:
     ref: /t1-data/user/jakobsen/genomes/Homo_sapiens/UCSC/hg38/STAR_with_ERCC_and_GTF/
     
 picard:
-    ref: /t1-data/databank/igenomes/Homo_sapiens/UCSC/hg38/Sequence/WholeGenomeFasta/genome.fa
+    ref: /databank/igenomes/Homo_sapiens/UCSC/hg38/Sequence/WholeGenomeFasta/genome_with_ERCC92.fa
         
 featurecounts:
     gtf: /databank/igenomes/Homo_sapiens/UCSC/hg38/Annotation/Genes/genes_with_ERCC.gtf
