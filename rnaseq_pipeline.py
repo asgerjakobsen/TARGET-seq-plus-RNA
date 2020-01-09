@@ -36,16 +36,21 @@ def trimming(input_file, output_file):
 
 ##### Mapping #####
     
-@follows(mkdir('hisat2'))
-@transform(trimming, regex(r"trimmed/(.*)_trimmed.fq.gz"), r"hisat2/\1.bam") 
-def hisat2(input_file, output_file):
+@follows(mkdir('STAR'))
+@transform(trimming, regex(r"trimmed/(.*)_trimmed.fq.gz"), r"STAR/\1.bam") 
+def star(input_file, output_file):
     outprefix = P.snip(output_file, ".bam")
-    statement = '''hisat2 -x %(hisat2_ref)s 
-    -U %(input_file)s -p %(hisat2_t)s 2> %(outprefix)s.log 
-    | samtools sort -@ %(hisat2_t)s -o %(output_file)s'''
+    statement = '''STAR 
+    --runThreadN %(star_threads)s
+    --genomeDir %(star_ref)s
+    --readFilesIn %(input_file)s 
+    --readFilesCommand zcat
+    --outSAMunmapped Within
+    --outFileNamePrefix %(outprefix)s_
+    | samtools view -bu | samtools sort -@ %(star_threads)s -o %(output_file)s'''
     P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['hisat2_t'], job_memory = '8G')
        
-@transform(hisat2, suffix('.bam'), '.bam.bai')     
+@transform(star, suffix('.bam'), '.bam.bai')     
 def bam_index(input_file, output_file):
     statement = 'samtools index %(input_file)s -@ 12 2> %(output_file)s.log'
     P.run(statement, job_queue=PARAMS['q'], job_threads=12, job_memory = '8G')  
