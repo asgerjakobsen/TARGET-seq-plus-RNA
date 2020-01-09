@@ -59,19 +59,19 @@ def bam_index(input_file, output_file):
     
 @follows(bam_index)
 @follows(mkdir('mapping_qc'))  
-@transform(hisat2, regex(r'hisat2/(.*).bam'), r'mapping_qc/\1.idxstat')     
+@transform(star, regex(r'STAR/(.*).bam'), r'mapping_qc/\1.idxstat')     
 def samtools_idxstat(input_file, output_file):
     statement = '''samtools idxstats %(input_file)s > %(output_file)s'''
     P.run(statement, job_queue=PARAMS['q'], job_memory = '8G') 
 
 @follows(bam_index, samtools_idxstat)    
-@transform(hisat2, regex(r'hisat2/(.*).bam'), r'mapping_qc/\1.alignment_metrics.txt')     
+@transform(star, regex(r'STAR/(.*).bam'), r'mapping_qc/\1.alignment_metrics.txt')     
 def alignment_summary_metrics(input_file, output_file):
     statement = '''picard CollectAlignmentSummaryMetrics R=%(picard_ref)s I=%(input_file)s O=%(output_file)s'''
     P.run(statement, job_queue=PARAMS['q'], job_memory = '16G') 
 
 @follows(bam_index, samtools_idxstat)
-@transform(hisat2, regex(r'hisat2/(.*).bam'), r'mapping_qc/\1.flagstat')     
+@transform(star, regex(r'STAR/(.*).bam'), r'mapping_qc/\1.flagstat')     
 def samtools_flagstat(input_file, output_file):
     statement = '''samtools flagstat %(input_file)s > %(output_file)s'''
     P.run(statement, job_queue=PARAMS['q'], job_memory = '8G')
@@ -80,7 +80,7 @@ def samtools_flagstat(input_file, output_file):
 ##### Featurecounts #####
     
 @follows(bam_index)
-@merge(hisat2, 'counts.txt')     
+@merge(star, 'counts.txt')     
 def count_reads(input_files, output_file):
     input_files_string = ' '.join(input_files)
     statement = '''featureCounts -T 12 -t exon -g gene_id --primary
