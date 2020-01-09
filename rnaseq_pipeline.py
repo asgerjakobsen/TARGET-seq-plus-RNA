@@ -84,10 +84,10 @@ def count_reads(input_files, output_file):
 
   
 #count_reads only there to specify it should be done at end
-@follows(samtools_flagstat, samtools_idxstat, alignment_summary_metrics, fastqc)
-@transform(count_reads, suffix('.txt'), '.html')    
+@follows(count_reads, samtools_idxstat, alignment_summary_metrics, fastqc)
+@merge(samtools_flagstat, 'multiqc/multiqc_report.html')    
 def multiqc(input_file, output_file):
-    statement = '''multiqc -o %(output_file)s .'''
+    statement = '''multiqc . -o multiqc'''
     P.run(statement, job_queue=PARAMS['q'], job_threads=12, job_memory = '8G')
 
 
