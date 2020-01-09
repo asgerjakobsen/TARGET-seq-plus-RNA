@@ -52,7 +52,7 @@ def star(input_file, output_file):
     | samtools view -bu | samtools sort -@ %(star_threads)s -o %(output_file)s'''
     P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_memory = '8G')
     if P.get_params()["zap_files"]==1:
-        IOTools.zap_file(infile)
+        IOTools.zap_file(input_file)
        
 @transform(star, suffix('.bam'), '.bam.bai')     
 def bam_index(input_file, output_file):
