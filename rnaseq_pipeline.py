@@ -19,10 +19,24 @@ def fastqc(input_file, output_file):
     statement = 'fastqc -t 8 %(input_file)s -o fastqc'
     P.run(statement, job_queue=PARAMS['q'], job_threads=8)
 
+
+##### Trimming #####
+    
+@follows(mkdir('trimmed'))
+@follows(mkdir('trimmed_fastqc'))
+@transform('fastq/*.fastq.gz', regex(r'fastq/(.*)_(.*)_R1_001.fastq.gz'), r'trimmed/\1_trimmed.fq.gz')
+def trimming(input_file, output_file):
+    basename = P.snip(os.path.basename(infile),"_R1_001.fastq.gz").split("_")[0]
+    statement = '''trim_galore --cores 4 -q 10 -a "A{100}" 
+    %(input_file)s  --basename %(basename)s
+    --fastqc_args "-t 4 -o trimmed_fastqc" '''
+    P.run(statement, job_queue=PARAMS['q'], job_threads=4)
+
+
 ##### Mapping #####
     
 @follows(mkdir('hisat2'))
-@transform("fastq/*_R1_001.fastq.gz", regex(r"fastq/(.*)_R1_001.fastq.gz"), r"hisat2/\1.bam") 
+@transform(trimming, regex(r"trimmed/(.*)_trimmed.fq.gz"), r"hisat2/\1.bam") 
 def hisat2(input_file, output_file):
     outprefix = P.snip(output_file, ".bam")
     statement = '''hisat2 -x %(hisat2_ref)s 
