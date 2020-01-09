@@ -15,30 +15,30 @@ import cgatcore.iotools as IOTools
 PARAMS = P.get_parameters("pipeline.yml")
 
 
-@follows(mkdir('fastqc'))
-@transform('fastq/*.fastq.gz', regex(r'fastq/(.*).fastq.gz'), r'fastqc/\1_fastqc.zip')
+@follows(mkdir('1_fastqc'))
+@transform('fastq/*.fastq.gz', regex(r'fastq/(.*).fastq.gz'), r'1_fastqc/\1_fastqc.zip')
 def fastqc(input_file, output_file):
-    statement = 'fastqc -t 8 %(input_file)s -o fastqc'
+    statement = 'fastqc -t 8 %(input_file)s -o 1_fastqc'
     P.run(statement, job_queue=PARAMS['q'], job_threads=8)
 
 
 ##### Trimming #####
     
-@follows(mkdir('trimmed'))
-@follows(mkdir('trimmed_fastqc'))
-@transform('fastq/*.fastq.gz', regex(r'fastq/(.*)_(.*)_R1_001.fastq.gz'), r'trimmed/\1_trimmed.fq.gz')
+@follows(mkdir('2_trimmed'))
+@follows(mkdir('3_trimmed_fastqc'))
+@transform('fastq/*.fastq.gz', regex(r'fastq/(.*)_(.*)_R1_001.fastq.gz'), r'2_trimmed/\1_trimmed.fq.gz')
 def trimming(input_file, output_file):
     basename = P.snip(os.path.basename(input_file),"_R1_001.fastq.gz").split("_")[0]
     statement = '''trim_galore --cores 4 -q %(trimgalore_q)s -a "A{100}" 
-    %(input_file)s  --basename %(basename)s -o trimmed
-    --fastqc_args "-t 4 -o trimmed_fastqc" '''
+    %(input_file)s  --basename %(basename)s -o 2_trimmed
+    --fastqc_args "-t 4 -o 3_trimmed_fastqc" '''
     P.run(statement, job_queue=PARAMS['q'], job_threads=4)
 
 
 ##### Mapping #####
     
-@follows(mkdir('STAR'))
-@transform(trimming, regex(r"trimmed/(.*)_trimmed.fq.gz"), r"STAR/\1.bam") 
+@follows(mkdir('4_mapping'))
+@transform(trimming, regex(r"2_trimmed/(.*)_trimmed.fq.gz"), r"4_mapping/\1.bam") 
 def star(input_file, output_file):
     outprefix = P.snip(output_file, ".bam")
     statement = '''STAR 
@@ -50,7 +50,7 @@ def star(input_file, output_file):
     --outSAMunmapped Within
     --outFileNamePrefix %(outprefix)s_
     | samtools view -bu | samtools sort -@ %(star_threads)s -o %(output_file)s'''
-    P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['hisat2_t'], job_memory = '8G')
+    P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_memory = '8G')
     if P.get_params()["zap_files"]==1:
         IOTools.zap_file(infile)
        
@@ -62,20 +62,20 @@ def bam_index(input_file, output_file):
 ##### Mapping QC #####
     
 @follows(bam_index)
-@follows(mkdir('mapping_qc'))  
-@transform(star, regex(r'STAR/(.*).bam'), r'mapping_qc/\1.idxstat')     
+@follows(mkdir('5_mapping_qc'))  
+@transform(star, regex(r'4_mapping/(.*).bam'), r'5_mapping_qc/\1.idxstat')     
 def samtools_idxstat(input_file, output_file):
     statement = '''samtools idxstats %(input_file)s > %(output_file)s'''
     P.run(statement, job_queue=PARAMS['q'], job_memory = '8G') 
 
 @follows(bam_index, samtools_idxstat)    
-@transform(star, regex(r'STAR/(.*).bam'), r'mapping_qc/\1.alignment_metrics.txt')     
+@transform(star, regex(r'4_mapping/(.*).bam'), r'5_mapping_qc/\1.alignment_metrics.txt')     
 def alignment_summary_metrics(input_file, output_file):
     statement = '''picard CollectAlignmentSummaryMetrics R=%(picard_ref)s I=%(input_file)s O=%(output_file)s'''
     P.run(statement, job_queue=PARAMS['q'], job_memory = '16G') 
 
 @follows(bam_index, samtools_idxstat)
-@transform(star, regex(r'STAR/(.*).bam'), r'mapping_qc/\1.flagstat')     
+@transform(star, regex(r'4_mapping/(.*).bam'), r'5_mapping_qc/\1.flagstat')     
 def samtools_flagstat(input_file, output_file):
     statement = '''samtools flagstat %(input_file)s > %(output_file)s'''
     P.run(statement, job_queue=PARAMS['q'], job_memory = '8G')
@@ -84,7 +84,8 @@ def samtools_flagstat(input_file, output_file):
 ##### Featurecounts #####
     
 @follows(bam_index)
-@merge(star, 'featurecounts.txt')     
+@follows(mkdir('6_featurecounts'))
+@merge(star, '6_featurecounts/featurecounts.txt')     
 def count_reads(input_files, output_file):
     input_files_string = ' '.join(input_files)
     statement = '''featureCounts -T 12 -t exon -g gene_id --primary
@@ -95,9 +96,9 @@ def count_reads(input_files, output_file):
   
 #count_reads only there to specify it should be done at end
 @follows(count_reads, samtools_idxstat, alignment_summary_metrics, fastqc)
-@merge(samtools_flagstat, 'multiqc/multiqc_report.html')    
+@merge(samtools_flagstat, '7_multiqc/multiqc_report.html')    
 def multiqc(input_file, output_file):
-    statement = '''multiqc . -o multiqc'''
+    statement = '''multiqc . -o 7_multiqc'''
     P.run(statement, job_queue=PARAMS['q'], job_threads=12, job_memory = '8G')
 
 
