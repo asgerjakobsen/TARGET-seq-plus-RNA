@@ -10,6 +10,7 @@ from ruffus import *
 from cgatcore import pipeline as P
 import sys
 import os
+import cgatcore.iotools as IOTools
 
 PARAMS = P.get_parameters("pipeline.yml")
 
@@ -50,6 +51,8 @@ def star(input_file, output_file):
     --outFileNamePrefix %(outprefix)s_
     | samtools view -bu | samtools sort -@ %(star_threads)s -o %(output_file)s'''
     P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['hisat2_t'], job_memory = '8G')
+    if P.get_params()["zap_files"]==1:
+        IOTools.zap_file(infile)
        
 @transform(star, suffix('.bam'), '.bam.bai')     
 def bam_index(input_file, output_file):
@@ -81,11 +84,12 @@ def samtools_flagstat(input_file, output_file):
 ##### Featurecounts #####
     
 @follows(bam_index)
-@merge(star, 'counts.txt')     
+@merge(star, 'featurecounts.txt')     
 def count_reads(input_files, output_file):
     input_files_string = ' '.join(input_files)
     statement = '''featureCounts -T 12 -t exon -g gene_id --primary
-    -a %(featurecounts_gtf)s -o %(output_file)s %(input_files_string)s'''
+    -a %(featurecounts_gtf)s -o %(output_file)s %(input_files_string)s
+    %(featurecounts_options)s'''
     P.run(statement, job_queue=PARAMS['q'], job_threads=12, job_memory = '8G')
 
   

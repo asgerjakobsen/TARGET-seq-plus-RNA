@@ -1,5 +1,8 @@
 q: batchq
 
+# If zap_files: 1 then infiles for the function will deletec where specified
+zap_files: 1
+
 trimgalore:
     q: 5
 
@@ -16,3 +19,4 @@ picard:
         
 featurecounts:
     gtf: /databank/igenomes/Homo_sapiens/UCSC/hg38/Annotation/Genes/genes_with_ERCC.gtf
+    options: --primary
