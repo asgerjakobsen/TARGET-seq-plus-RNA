@@ -1,9 +1,16 @@
 q: batchq
 
+trimgalore:
+    q: 5
+
 hisat2:
     t: 12
     ref: /t1-data/databank/igenomes/Homo_sapiens/UCSC/hg38/Sequence/HISAT2/genome
 
+star:
+    t: 12
+    ref: /databank/igenomes/Homo_sapiens/UCSC/hg38/Sequence/STAR_with_ERCC_and_GTF/
+    
 picard:
     ref: /t1-data/databank/igenomes/Homo_sapiens/UCSC/hg38/Sequence/WholeGenomeFasta/genome.fa
         
