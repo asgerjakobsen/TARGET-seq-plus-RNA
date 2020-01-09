@@ -9,6 +9,7 @@ Created on Wed Jan  8 17:09:47 2020
 from ruffus import *
 from cgatcore import pipeline as P
 import sys
+import os
 
 PARAMS = P.get_parameters("pipeline.yml")
 
@@ -26,9 +27,9 @@ def fastqc(input_file, output_file):
 @follows(mkdir('trimmed_fastqc'))
 @transform('fastq/*.fastq.gz', regex(r'fastq/(.*)_(.*)_R1_001.fastq.gz'), r'trimmed/\1_trimmed.fq.gz')
 def trimming(input_file, output_file):
-    basename = P.snip(os.path.basename(infile),"_R1_001.fastq.gz").split("_")[0]
+    basename = P.snip(os.path.basename(input_file),"_R1_001.fastq.gz").split("_")[0]
     statement = '''trim_galore --cores 4 -q 10 -a "A{100}" 
-    %(input_file)s  --basename %(basename)s
+    %(input_file)s  --basename %(basename)s -o trimmed
     --fastqc_args "-t 4 -o trimmed_fastqc" '''
     P.run(statement, job_queue=PARAMS['q'], job_threads=4)
 
