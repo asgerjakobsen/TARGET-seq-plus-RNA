@@ -1,0 +1,20 @@
+name: rnaseq
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - cgatcore
+  - drmaa
+  - fastqc
+  - multiqc
+  - numpy
+  - pandas
+  - picard
+  - python
+  - ruffus
+  - samtools
+  - star
+  - subread
+  - trim-galore
+
