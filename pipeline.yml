@@ -6,17 +6,13 @@ zap_files: 1
 trimgalore:
     q: 5
 
-hisat2:
-    t: 12
-    ref: /t1-data/databank/igenomes/Homo_sapiens/UCSC/hg38/Sequence/HISAT2/genome
-
 star:
     threads: 12
-    ref: /t1-data/user/jakobsen/genomes/Homo_sapiens/UCSC/hg38/STAR_with_ERCC_and_GTF/
+    ref: /t1-data/user/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/STAR_with_ERCC_and_GTF/
     
 picard:
-    ref: /databank/igenomes/Homo_sapiens/UCSC/hg38/Sequence/WholeGenomeFasta/genome_with_ERCC92.fa
+    ref: /databank/igenomes/Homo_sapiens/Ensembl/GRCh38/Sequence/WholeGenomeFasta/genome_with_ERCC.fasta
         
 featurecounts:
-    gtf: /databank/igenomes/Homo_sapiens/UCSC/hg38/Annotation/Genes/genes_with_ERCC.gtf
+    gtf: /databank/igenomes/Homo_sapiens/Ensembl/GRCh38/Annotation/Homo_sapiens.GRCh38.86.with_ERCC.gtf
     options: --primary
