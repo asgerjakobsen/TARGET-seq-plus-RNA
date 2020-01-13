@@ -29,7 +29,8 @@ def fastqc(input_file, output_file):
 @transform('fastq/*.fastq.gz', regex(r'fastq/(.*)_(.*)_R1_001.fastq.gz'), r'2_trimmed/\1_trimmed.fq.gz')
 def trimming(input_file, output_file):
     basename = P.snip(os.path.basename(input_file),"_R1_001.fastq.gz").split("_")[0]
-    statement = '''trim_galore --cores 4 -q %(trimgalore_q)s -a "A{100}" 
+    statement = '''trim_galore --cores 4 -q %(trimgalore_q)s -a "A{100}"
+    %(trimgalore_options)s
     %(input_file)s  --basename %(basename)s -o 2_trimmed
     --fastqc_args "-t 4 -o 3_trimmed_fastqc" '''
     P.run(statement, job_queue=PARAMS['q'], job_threads=4)

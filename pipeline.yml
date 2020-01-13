@@ -5,6 +5,7 @@ zap_files: 1
 
 trimgalore:
     q: 5
+    options: --stringency 3 --length 25
 
 star:
     threads: 12
