@@ -12,8 +12,8 @@ star:
     ref: /t1-data/user/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/STAR_with_ERCC_and_GTF/
     
 picard:
-    ref: /databank/igenomes/Homo_sapiens/Ensembl/GRCh38/Sequence/WholeGenomeFasta/genome_with_ERCC.fasta
+    ref: /t1-data/user/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/WholeGenomeFasta/Homo_sapiens.GRCh38.dna.primary_assembly_with_ERCC92.fa
         
 featurecounts:
-    gtf: /databank/igenomes/Homo_sapiens/Ensembl/GRCh38/Annotation/Homo_sapiens.GRCh38.86.with_ERCC.gtf
+    gtf: /t1-data/user/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/Annotation/Homo_sapiens.GRCh38.98.with_ERCC92.gtf
     options: --primary
