@@ -107,6 +107,10 @@ def multiqc(input_file, output_file):
 @follows(samtools_flagstat, samtools_idxstat, alignment_summary_metrics, fastqc)
 def Mapping_qc():
     pass
+    
+@follows(Mapping_qc, count_reads, multiqc)
+def full():
+    pass
 
 if __name__=="__main__":
     sys.exit(P.main(sys.argv))
