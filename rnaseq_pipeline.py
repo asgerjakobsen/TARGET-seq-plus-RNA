@@ -18,8 +18,8 @@ PARAMS = P.get_parameters("pipeline.yml")
 @follows(mkdir('1_fastqc'))
 @transform('fastq/*.fastq.gz', regex(r'fastq/(.*).fastq.gz'), r'1_fastqc/\1_fastqc.zip')
 def fastqc(input_file, output_file):
-    statement = 'fastqc -t 8 %(input_file)s -o 1_fastqc'
-    P.run(statement, job_queue=PARAMS['q'], job_threads=8)
+    statement = 'fastqc -t 4 %(input_file)s -o 1_fastqc'
+    P.run(statement, job_queue=PARAMS['q'], job_threads=4)
 
 
 ##### Trimming #####
@@ -104,7 +104,7 @@ def multiqc(input_file, output_file):
 
 
 
-@follows(samtools_flagstat, samtools_idxstat, alignment_summary_metrics, fastqc)
+@follows(fastqc, trimming, star, samtools_flagstat, samtools_idxstat, alignment_summary_metrics)
 def Mapping_qc():
     pass
     
