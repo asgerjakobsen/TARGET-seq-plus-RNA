@@ -16,4 +16,4 @@ picard:
         
 featurecounts:
     gtf: /t1-data/user/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/Annotation/Homo_sapiens.GRCh38.98.with_ERCC92.gtf
-    options: --primary
+    options: --primary --extraAttributes gene_name

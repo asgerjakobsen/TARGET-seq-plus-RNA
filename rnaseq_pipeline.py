@@ -89,7 +89,7 @@ def samtools_flagstat(input_file, output_file):
 @merge(star, '6_featurecounts/featurecounts.txt')     
 def count_reads(input_files, output_file):
     input_files_string = ' '.join(input_files)
-    statement = '''featureCounts -T 12 -t exon -g gene_id --primary
+    statement = '''featureCounts -T 12 -t exon -g gene_id
     -a %(featurecounts_gtf)s -o %(output_file)s %(input_files_string)s
     %(featurecounts_options)s'''
     P.run(statement, job_queue=PARAMS['q'], job_threads=12, job_memory = '8G')
