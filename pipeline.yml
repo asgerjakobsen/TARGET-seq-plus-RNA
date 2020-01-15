@@ -8,7 +8,7 @@ trimgalore:
     options: --stringency 3 --length 25
 
 star:
-    threads: 12
+    threads: 4
     ref: /t1-data/user/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/STAR_with_ERCC_and_GTF/
     
 picard:

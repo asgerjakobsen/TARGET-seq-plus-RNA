@@ -57,8 +57,8 @@ def star(input_file, output_file):
        
 @transform(star, suffix('.bam'), '.bam.bai')     
 def bam_index(input_file, output_file):
-    statement = 'samtools index %(input_file)s -@ 12 2> %(output_file)s.log'
-    P.run(statement, job_queue=PARAMS['q'], job_threads=12, job_memory = '8G')  
+    statement = 'samtools index %(input_file)s -@ 4 2> %(output_file)s.log'
+    P.run(statement, job_queue=PARAMS['q'], job_threads=4, job_memory = '8G')
 
 ##### Mapping QC #####
     
