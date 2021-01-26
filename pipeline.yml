@@ -1,4 +1,4 @@
-q: batchq
+q: batch
 
 # If zap_files: 1 then infiles for the function will deletec where specified
 zap_files: 1
