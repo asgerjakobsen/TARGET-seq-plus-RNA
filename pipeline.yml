@@ -3,9 +3,24 @@ q: batch
 # If zap_files: 1 then infiles for the function will deletec where specified
 zap_files: 1
 
+# FASTQ input files
+# There are two options:
+# SE_illumina: single-end reads with file extension in the format: R1_001.fastq.gz
+# PE_novogene: paired-end reads with file extension in the format: L1_1.fq.gz
+
+input: PE_novogene
+# If PE_novogene, map using just "read2" or "both"
+mapping: read2
+
 trimgalore:
     q: 5
     options: --stringency 3 --length 25
+
+cutadapt:
+    barcodes: barcodes.fasta
+    q: 15
+    options: --minimum-length 1:25 --pair-filter=both
+# If PE_novogene the pipeline also needs a barcodes.fasta file with cell barcodes
 
 star:
     threads: 4
