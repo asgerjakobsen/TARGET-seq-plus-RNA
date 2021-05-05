@@ -16,10 +16,10 @@ PARAMS = P.get_parameters("pipeline.yml")
 
 
 @follows(mkdir('1_fastqc'))
-@transform('fastq/*q.gz', regex(r'fastq/(.*).f(.?)q.gz'), r'1_fastqc/\1_fastqc.zip')
+@transform('fastq/*q.gz', regex(r'fastq/(.*).f.*q.gz'), r'1_fastqc/\1_fastqc.zip')
 def fastqc(input_file, output_file):
     statement = 'fastqc -t 4 %(input_file)s -o 1_fastqc'
-    P.run(statement, job_queue=PARAMS['q'], job_threads=4)
+    P.run(statement, job_queue=PARAMS['q'], job_threads=2)
 
 ### Merge lanes ###
 
@@ -27,7 +27,7 @@ def fastqc(input_file, output_file):
 @follows(mkdir('2_trimmed'))
 @follows(fastqc)
 @active_if(P.get_params()['input'] == "PE_novogene")
-@collate('fastq/*q.gz', regex(r'fastq/(.*?)_(.*)_(L00\d)_(R[12]).fq.gz'), r'2_trimmed/\1.merged_\4.fq.gz')
+@collate('fastq/*q.gz', regex(r'fastq/(.*?)_(.*)_(L00\d)_(R[12])_001.f.*q.gz'), r'2_trimmed/\1.merged_\4.fq.gz')
 def merge_lanes(input_files, output_file):
     files = ' '.join(str(x) for x in input_files)
     statement = '''cat %(files)s
@@ -57,7 +57,7 @@ def trimming_SE(input_file, output_file):
 @follows(mkdir('2_trimmed'))
 @follows(merge_lanes)
 @active_if(P.get_params()['input'] == "PE_novogene")
-@subdivide('2_trimmed/*merged_1.fq.gz', regex(r"2_trimmed/(.*).merged_R1.fq.gz"), output = r"2_trimmed/\1/\1_HT*.trimmed_R1.fq.gz")
+@subdivide('2_trimmed/*merged_R1.fq.gz', regex(r"2_trimmed/(.*).merged_R1.fq.gz"), output = r"2_trimmed/\1/\1_HT*.trimmed_R1.fq.gz")
 def trimming_PE(input_file, output_files):
     input_file2 = input_file.replace("_R1.fq.gz", "_R2.fq.gz")
     #output_file2 = output_files.replace(".trimmed_R1.fq.gz", ".trimmed_R2.fq.gz")
@@ -115,7 +115,7 @@ def star(input_file, output_file):
         --outSAMunmapped Within
         --outFileNamePrefix %(outprefix)s_
         | samtools view -bu | samtools sort -@ %(star_threads)s -o %(output_file)s'''
-        P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_memory = '6G')
+        P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_memory = '30G')
         if P.get_params()["zap_files"]==1:
             IOTools.zap_file(input_file)
     
@@ -124,7 +124,7 @@ def star(input_file, output_file):
         read1 = input_file.replace("_R2.fq.gz", "_R1.fq.gz")
         #basename = P.snip(os.path.basename(input_file),".trimmed_2.fq.gz").split("_")[0]
         statement = '''STAR
-        --runThreadN %(star_threads)s --genomeLoad LoadAndRemove
+        --runThreadN %(star_threads)s
         --genomeDir %(star_ref)s
         --readFilesIn %(input_file)s
         --readFilesCommand zcat
@@ -132,7 +132,7 @@ def star(input_file, output_file):
         --outSAMunmapped Within
         --outFileNamePrefix %(outprefix)s_
         | samtools view -bu | samtools sort -@ %(star_threads)s -o %(output_file)s'''
-        P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_memory = '6G')
+        P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_memory = '30G')
         if P.get_params()["zap_files"]==1:
             IOTools.zap_file(input_file)
             IOTools.zap_file(read1)
@@ -141,7 +141,7 @@ def star(input_file, output_file):
     elif P.get_params()['input'] == "PE_novogene" and P.get_params()['mapping'] == "both":
         read1 = input_file.replace("_R2.fq.gz", "_R1.fq.gz")
         statement = '''STAR
-        --runThreadN %(star_threads)s --genomeLoad LoadAndRemove
+        --runThreadN %(star_threads)s
         --genomeDir %(star_ref)s
         --readFilesIn %(read1)s %(input_file)s
         --readFilesCommand zcat
@@ -149,7 +149,7 @@ def star(input_file, output_file):
         --outSAMunmapped Within
         --outFileNamePrefix %(outprefix)s_
         | samtools view -bu | samtools sort -@ %(star_threads)s -o %(output_file)s'''
-        P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_memory = '6G')
+        P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_memory = '30G')
         if P.get_params()["zap_files"]==1:
             IOTools.zap_file(input_file)
             IOTools.zap_file(read1)
@@ -160,8 +160,8 @@ def star(input_file, output_file):
 
 @transform(star, suffix('.bam'), '.bam.bai')     
 def bam_index(input_file, output_file):
-    statement = 'samtools index %(input_file)s -@ 4 2> %(output_file)s.log'
-    P.run(statement, job_queue=PARAMS['q'], job_threads=4, job_memory = '8G')
+    statement = 'samtools index %(input_file)s -@ 1 2> %(output_file)s.log'
+    P.run(statement, job_queue=PARAMS['q'], job_threads=1, job_memory = '100M')
 
 
 ##### Mapping QC #####
@@ -171,48 +171,43 @@ def bam_index(input_file, output_file):
 @transform(star, regex(r'4_mapping/(.*)/(.*).bam'), r'5_mapping_qc/\1/\2.idxstat')
 def samtools_idxstat(input_file, output_file):
     statement = '''samtools idxstats %(input_file)s > %(output_file)s'''
-    P.run(statement, job_queue=PARAMS['q'], job_memory = '8G') 
-
-@follows(bam_index, samtools_idxstat)    
-@transform(star, regex(r'4_mapping/(.*)/(.*).bam'), r'5_mapping_qc/\1/\2.alignment_metrics.txt')
-def alignment_summary_metrics(input_file, output_file):
-    statement = '''picard CollectAlignmentSummaryMetrics R=%(picard_ref)s I=%(input_file)s O=%(output_file)s'''
-    P.run(statement, job_queue=PARAMS['q'], job_memory = '16G') 
+    P.run(statement, job_queue=PARAMS['q'], job_memory = '100M')
 
 @follows(bam_index, samtools_idxstat)
 @transform(star, regex(r'4_mapping/(.*)/(.*).bam'), r'5_mapping_qc/\1/\2.flagstat')
 def samtools_flagstat(input_file, output_file):
     statement = '''samtools flagstat %(input_file)s > %(output_file)s'''
-    P.run(statement, job_queue=PARAMS['q'], job_memory = '8G')
+    P.run(statement, job_queue=PARAMS['q'], job_memory = '100M')
 
 
 ##### Featurecounts #####
     
 @follows(bam_index)
 @follows(mkdir('6_featurecounts'))
-@merge(star, '6_featurecounts/featurecounts.txt')     
+@merge(star, '6_featurecounts/counts.txt')
 def count_reads(input_files, output_file):
     input_files_string = ' '.join(input_files)
     statement = '''featureCounts -T 12 -t exon -g gene_id
     -a %(featurecounts_gtf)s -o %(output_file)s %(input_files_string)s
-    %(featurecounts_options)s'''
+    %(featurecounts_options)s
+    2> 6_featurecounts/featurecounts_log.txt'''
     P.run(statement, job_queue=PARAMS['q'], job_threads=12, job_memory = '8G')
 
 ## Multiqc report ##
 
-@follows(count_reads, samtools_idxstat, alignment_summary_metrics)
+@follows(count_reads, samtools_idxstat)
 #count_reads only there to specify it should be done at end
 @merge(samtools_flagstat, '7_multiqc/multiqc_report.html')
 def multiqc(input_file, output_file):
     statement = '''multiqc . -o 7_multiqc'''
-    P.run(statement, job_queue=PARAMS['q'], job_threads=12, job_memory = '8G')
+    P.run(statement, job_queue=PARAMS['q'], job_memory = '8G')
 
 
 @follows(fastqc, trimming_SE, trimming_PE)
 def Trimming():
     pass
     
-@follows(star, samtools_flagstat, samtools_idxstat, alignment_summary_metrics)
+@follows(star, samtools_flagstat, samtools_idxstat)
 def Mapping_qc():
     pass
     
