@@ -70,7 +70,7 @@ def trimming_PE(input_file, output_files):
     cutadapt --cores=0
     -g file:%(cutadapt_barcodes)s
     --nextseq-trim=%(cutadapt_q)s
-    -A "A{100};min_overlap=3"
+    -A "A{20}N{80};min_overlap=3" -A AGCAACTCTGCGTTGATACCACTGCTT
     %(cutadapt_options)s
     -o 2_trimmed/%(basename)s/%(basename)s_{name}.trimmed_R1.fq.gz
     -p 2_trimmed/%(basename)s/%(basename)s_{name}.trimmed_R2.fq.gz
@@ -81,16 +81,6 @@ def trimming_PE(input_file, output_files):
     if P.get_params()["zap_files"]==1:
         IOTools.zap_file(input_file)
         IOTools.zap_file(input_file2)
-    
-
-#@follows(mkdir('3_trimmed_fastqc'))
-#@follows(trimming_SE)
-#@follows(trimming_PE)
-#@follows(merge_lanes)
-#@transform('2_trimmed/*.fq.gz', regex(r'2.trimmed/(.*).fq.gz'), r'3_trimmed_fastqc/\1_fastqc.zip')
-#def trimmed_fastqc(input_file, output_file):
-#    statement = 'fastqc -t 4 %(input_file)s -o 3_trimmed_fastqc'
-#    P.run(statement, job_queue=PARAMS['q'], job_threads=1)
 
 
 

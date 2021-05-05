@@ -1,7 +1,7 @@
 q: batch
 
-# If zap_files: 1 then infiles for the function will deletec where specified
-zap_files: 0
+# If zap_files: 1 then infiles for the function will deleted where specified
+zap_files: 1
 
 # FASTQ input files
 # There are two options:
@@ -12,23 +12,20 @@ input: PE_novogene
 # If PE_novogene, map using just "read2" or "both"
 mapping: read2
 
-trimgalore:
-    q: 5
-    options: --stringency 3 --length 25
-
 cutadapt:
     barcodes: barcodes.fasta
     q: 15
-    options: --minimum-length 1:25 --pair-filter=any
+    options: --minimum-length :25 --pair-filter=any
 # If PE_novogene the pipeline also needs a barcodes.fasta file with cell barcodes
 
 star:
-    threads: 4
-    ref: /t1-data/user/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/STAR_with_ERCC_and_GTF/
+    threads: 1
+    ref: /t1-data/user/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/STAR_2.7.7a_with_ERCC_filtered_GTF
     
 picard:
     ref: /t1-data/user/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/WholeGenomeFasta/Homo_sapiens.GRCh38.dna.primary_assembly_with_ERCC92.fa
         
 featurecounts:
-    gtf: /t1-data/user/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/Annotation/Homo_sapiens.GRCh38.98.with_ERCC92.gtf
-    options: --primary --extraAttributes gene_name
+    gtf: /t1-data/user/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/Annotation/Homo_sapiens.GRCh38.102.filtered.with_ERCC92.gtf
+    options: --primary --extraAttributes gene_name -s 1
+# -s 1 means stranded couting
