@@ -16,5 +16,5 @@ dependencies:
   - samtools
   - star
   - subread
-  - trim-galore
+  - cutadapt
 
