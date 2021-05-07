@@ -18,7 +18,7 @@ PARAMS = P.get_parameters("pipeline.yml")
 @follows(mkdir('1_fastqc'))
 @transform('fastq/*q.gz', regex(r'fastq/(.*).f.*q.gz'), r'1_fastqc/\1_fastqc.zip')
 def fastqc(input_file, output_file):
-    statement = 'fastqc -t 4 %(input_file)s -o 1_fastqc'
+    statement = 'fastqc -t 2 %(input_file)s -o 1_fastqc'
     P.run(statement, job_queue=PARAMS['q'], job_threads=2)
 
 ### Merge lanes ###
@@ -46,10 +46,14 @@ def trimming_SE(input_file, output_file):
     statement = '''mkdir 2_trimmed/%(basename)s &&
     mkdir -p 3_mapping/%(basename)s &&
     mkdir -p 4_mapping_qc/%(basename)s &&
-    trim_galore --cores 4 -q %(trimgalore_q)s -a "A{100}"
-    %(trimgalore_options)s
-    %(input_file)s  --basename %(basename)s -o 2_trimmed
-    --fastqc_args "-t 4 -o 3_trimmed_fastqc" '''
+    cutadapt --cores=0
+    --nextseq-trim=%(cutadapt_q)s
+    -a "A{20}N{80};min_overlap=3" -a AGCAACTCTGCGTTGATACCACTGCTT
+    %(cutadapt_options)s
+    -o 2_trimmed/%(basename)s/%(basename)s.trimmed.fq.gz
+    %(input_file)s
+    > 2_trimmed/%(basename)s_trimming_report.txt
+    '''
     P.run(statement, job_queue=PARAMS['q'], job_threads=4)
 
 
