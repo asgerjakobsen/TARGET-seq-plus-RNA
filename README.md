@@ -41,3 +41,7 @@ Reads will be split and named according to the barcode: "HTxxx".
 Currently mapping on a single read works.
 For paired-end reads where Read 1 is a cell barcode, please specify `mapping: read2` in the `pipeline.yml`.
 STAR and FeatureCounts need a GTF with gene annotations for mapping and gene assignment.
+
+### Usage
+```
+nohup python rnaseq_pipeline.py make full &
