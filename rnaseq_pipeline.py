@@ -184,7 +184,7 @@ def count_reads(input_files, output_file):
     -a %(featurecounts_gtf)s -o %(output_file)s %(input_files_string)s
     %(featurecounts_options)s
     2> 5_featurecounts/featurecounts_log.txt'''
-    P.run(statement, job_queue=PARAMS['q'], job_threads=12, job_memory = '8G')
+    P.run(statement, job_queue=PARAMS['q'], job_threads=12, job_memory =PARAMS['featurecounts_memory'])
 
 ## Multiqc report ##
 
