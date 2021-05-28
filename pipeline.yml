@@ -10,6 +10,8 @@ zap_files: 1
 # PE_barcoded: paired-end reads where Read 1 is the cell barcode with file extension in the format: L00[1-4]_R[1-2]_001.fq.gz
 
 input: PE_barcoded
+# Lanes: 'merged' or 'split'. If split, the pipeline will merge lanes
+lanes: single
 
 # Mapping
 # If PE_barcoded, map using just "read2" or "both"
@@ -33,4 +35,5 @@ featurecounts:
      # -s 1 means stranded couting
     options: --primary --extraAttributes gene_name -s 1
     # Memory needed is roughly 1/10th of the input fastq.qz size - 600Gb needs about 65G
-    memory: 80G
+    # This is per thread, so for 4 threads, it is a quarter
+    memory: 20G

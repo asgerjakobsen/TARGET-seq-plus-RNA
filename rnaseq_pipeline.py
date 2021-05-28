@@ -26,7 +26,7 @@ def fastqc(input_file, output_file):
 ## Merge fastq files where they separated by lane
 @follows(mkdir('2_trimmed'))
 @follows(fastqc)
-@active_if(P.get_params()['input'] == "PE_barcoded")
+@active_if(P.get_params()['lanes'] == "split")
 @collate('fastq/*q.gz', regex(r'fastq/(.*?)_(.*)_(L00\d)_(R[12])_001.f.*q.gz'), r'2_trimmed/\1.merged_\4.fq.gz')
 def merge_lanes(input_files, output_file):
     files = ' '.join(str(x) for x in input_files)
@@ -57,12 +57,36 @@ def trimming_SE(input_file, output_file):
     P.run(statement, job_queue=PARAMS['q'], job_threads=4)
 
 
-## PE_barcoded: paired-end reads with file extension in the format: L001_R1_001.fastq.gz
+## PE_barcoded merged lanes: paired-end reads with file extension in the format: _R1_001.fastq.gz
+@follows(mkdir('2_trimmed'))
+@active_if(P.get_params()['input'] == "PE_barcoded" and P.get_params()['lanes'] == "merged")
+@subdivide('fastq/*_R1_001.fastq.gz', regex(r"fastq/(.*)_(.*)_R1_001.fastq.gz"), output = r"2_trimmed/\1/\1_HT*.trimmed_R1.fq.gz")
+def trimming_PE_merged(input_file, output_files):
+    input_file2 = input_file.replace("_R1_001.fastq.gz", "_R2_001.fastq.gz")
+    outfile_prefix = P.snip(input_file,".merged_R1.fq.gz").split(".")[0]
+    basename = P.snip(os.path.basename(input_file),"_R1_001.fastq.gz").split("_")[0]
+    statement = '''mkdir 2_trimmed/%(basename)s &&
+    mkdir -p 3_mapping/%(basename)s &&
+    mkdir -p 4_mapping_qc/%(basename)s &&
+    cutadapt --cores=4
+    -g file:%(cutadapt_barcodes)s
+    --nextseq-trim=%(cutadapt_q)s
+    -A "A{20}N{80};min_overlap=3" -A AGCAACTCTGCGTTGATACCACTGCTT
+    %(cutadapt_options)s
+    -o 2_trimmed/%(basename)s/%(basename)s_{name}.trimmed_R1.fq.gz
+    -p 2_trimmed/%(basename)s/%(basename)s_{name}.trimmed_R2.fq.gz
+    %(input_file)s
+    %(input_file2)s
+    > %(outfile_prefix)s_trimming_report.txt'''
+    P.run(statement, job_queue=PARAMS['q'], job_threads=4)
+
+
+## PE_barcoded split lanes: paired-end reads with file extension in the format: _L001_R1_001.fastq.gz
 @follows(mkdir('2_trimmed'))
 @follows(merge_lanes)
-@active_if(P.get_params()['input'] == "PE_barcoded")
+@active_if(P.get_params()['input'] == "PE_barcoded" and P.get_params()['lanes'] == "split")
 @subdivide('2_trimmed/*merged_R1.fq.gz', regex(r"2_trimmed/(.*).merged_R1.fq.gz"), output = r"2_trimmed/\1/\1_HT*.trimmed_R1.fq.gz")
-def trimming_PE(input_file, output_files):
+def trimming_PE_split(input_file, output_files):
     input_file2 = input_file.replace("_R1.fq.gz", "_R2.fq.gz")
     outfile_prefix = P.snip(input_file,".merged_R1.fq.gz").split(".")[0]
     basename = P.snip(os.path.basename(input_file),".merged_R1.fq.gz").split("_")[0]
@@ -70,7 +94,7 @@ def trimming_PE(input_file, output_files):
     statement = '''mkdir 2_trimmed/%(basename)s &&
     mkdir -p 3_mapping/%(basename)s &&
     mkdir -p 4_mapping_qc/%(basename)s &&
-    cutadapt --cores=0
+    cutadapt --cores=4
     -g file:%(cutadapt_barcodes)s
     --nextseq-trim=%(cutadapt_q)s
     -A "A{20}N{80};min_overlap=3" -A AGCAACTCTGCGTTGATACCACTGCTT
@@ -87,12 +111,12 @@ def trimming_PE(input_file, output_files):
 
 
 
-
 ##### Mapping #####
 
 @follows(mkdir('3_mapping'))
 @follows(trimming_SE)
-@follows(trimming_PE)
+@follows(trimming_PE_merged)
+@follows(trimming_PE_split)
 @follows(merge_lanes)
 @transform('2_trimmed/*/*.fq.gz', regex(r"2_trimmed/(.*)/(.*).trimmed(_R2)?.fq.gz"), r"3_mapping/\1/\2.bam")
 def star(input_file, output_file):
@@ -184,7 +208,7 @@ def count_reads(input_files, output_file):
     -a %(featurecounts_gtf)s -o %(output_file)s %(input_files_string)s
     %(featurecounts_options)s
     2> 5_featurecounts/featurecounts_log.txt'''
-    P.run(statement, job_queue=PARAMS['q'], job_threads=12, job_memory =PARAMS['featurecounts_memory'])
+    P.run(statement, job_queue=PARAMS['q'], job_threads=4, job_memory =PARAMS['featurecounts_memory'])
 
 ## Multiqc report ##
 
@@ -196,7 +220,7 @@ def multiqc(input_file, output_file):
     P.run(statement, job_queue=PARAMS['q'], job_memory = '8G')
 
 
-@follows(fastqc, trimming_SE, trimming_PE)
+@follows(fastqc, trimming_SE, trimming_PE_merged, trimming_PE_split)
 def Trimming():
     pass
     
