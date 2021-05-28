@@ -11,7 +11,7 @@ zap_files: 1
 
 input: PE_barcoded
 # Lanes: 'merged' or 'split'. If split, the pipeline will merge lanes
-lanes: single
+lanes: merged
 
 # Mapping
 # If PE_barcoded, map using just "read2" or "both"
