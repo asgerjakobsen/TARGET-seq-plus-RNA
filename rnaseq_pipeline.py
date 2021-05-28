@@ -63,7 +63,6 @@ def trimming_SE(input_file, output_file):
 @subdivide('fastq/*_R1_001.fastq.gz', regex(r"fastq/(.*)_(.*)_R1_001.fastq.gz"), output = r"2_trimmed/\1/\1_HT*.trimmed_R1.fq.gz")
 def trimming_PE_merged(input_file, output_files):
     input_file2 = input_file.replace("_R1_001.fastq.gz", "_R2_001.fastq.gz")
-    outfile_prefix = P.snip(input_file,".merged_R1.fq.gz").split(".")[0]
     basename = P.snip(os.path.basename(input_file),"_R1_001.fastq.gz").split("_")[0]
     statement = '''mkdir 2_trimmed/%(basename)s &&
     mkdir -p 3_mapping/%(basename)s &&
@@ -77,7 +76,7 @@ def trimming_PE_merged(input_file, output_files):
     -p 2_trimmed/%(basename)s/%(basename)s_{name}.trimmed_R2.fq.gz
     %(input_file)s
     %(input_file2)s
-    > %(outfile_prefix)s_trimming_report.txt'''
+    > 2_trimmed/%(basename)s_trimming_report.txt'''
     P.run(statement, job_queue=PARAMS['q'], job_threads=4)
 
 
