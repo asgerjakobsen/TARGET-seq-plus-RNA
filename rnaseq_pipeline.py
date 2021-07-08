@@ -60,7 +60,7 @@ def trimming_SE(input_file, output_file):
 ## PE_barcoded merged lanes: paired-end reads with file extension in the format: _R1_001.fastq.gz
 @follows(mkdir('2_trimmed'))
 @active_if(P.get_params()['input'] == "PE_barcoded" and P.get_params()['lanes'] == "merged")
-@subdivide('fastq/*_R1_001.fastq.gz', regex(r"fastq/(.*)_(.*)_R1_001.fastq.gz"), output = r"2_trimmed/\1/\1_HT*.trimmed_R1.fq.gz")
+@subdivide('fastq/*_R1_001.fastq.gz', regex(r"fastq/(.*)_R1_001.fastq.gz"), output = r"2_trimmed/\1/\1_HT*.trimmed_R1.fq.gz")
 def trimming_PE_merged(input_file, output_files):
     input_file2 = input_file.replace("_R1_001.fastq.gz", "_R2_001.fastq.gz")
     basename = P.snip(os.path.basename(input_file),"_R1_001.fastq.gz").split("_")[0]
