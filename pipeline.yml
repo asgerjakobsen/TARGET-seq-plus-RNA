@@ -20,7 +20,7 @@ mapping: read2
 cutadapt:
     barcodes: barcodes.fasta
     q: 15
-    options: --minimum-length :25 --pair-filter=any
+    options: --minimum-length :25 -e 0.15  --pair-filter=any
 # If PE_novogene the pipeline also needs a barcodes.fasta file with cell barcodes
 
 star:
