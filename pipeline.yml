@@ -31,7 +31,7 @@ picard:
     ref: /t1-data/project/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/WholeGenomeFasta/Homo_sapiens.GRCh38.dna.primary_assembly_with_ERCC92.fa
         
 featurecounts:
-    gtf: /stopgap/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/gencode.v38.primary_assembly.annotation.filtered.with_ERCC92.gtf
+    gtf: /stopgap/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/Annotation/gencode.v38.primary_assembly.annotation.filtered.with_ERCC92.gtf
      # -s 1 means stranded couting
     options: --primary --extraAttributes gene_name -s 1
     # Memory needed is roughly 1/10th of the input fastq.qz size - 600Gb needs about 65G
