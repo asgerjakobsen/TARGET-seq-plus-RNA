@@ -7,12 +7,13 @@
 genome="GRCh38"
 
 # Folders
+cd /stopgap/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38
 sequence="./WholeGenomeFasta"
 annotation="./Annotation"
 
 # ERCC
-ercc="/t1-data/project/vyaslab/jakobsen/genomes/ERCC92/ERCC92.fa"
-ercc_gtf="/t1-data/project/vyaslab/jakobsen/genomes/ERCC92/ERCC92_v2.gtf"
+ercc="/stopgap/vyaslab/jakobsen/genomes/ERCC92/ERCC92.fa"
+ercc_gtf="/stopgap/vyaslab/jakobsen/genomes/ERCC92/ERCC92_v2.gtf"
 
 
 
