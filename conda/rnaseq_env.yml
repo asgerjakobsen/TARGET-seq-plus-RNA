@@ -17,4 +17,4 @@ dependencies:
   - star
   - subread
   - cutadapt
-
+  - rseqc
