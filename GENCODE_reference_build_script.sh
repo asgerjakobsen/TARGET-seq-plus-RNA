@@ -13,7 +13,7 @@ annotation="./Annotation"
 
 # ERCC
 ercc="/stopgap/vyaslab/jakobsen/genomes/ERCC92/ERCC92.fa"
-ercc_gtf="/stopgap/vyaslab/jakobsen/genomes/ERCC92/ERCC92_v2.gtf"
+ercc_gtf="/stopgap/vyaslab/jakobsen/genomes/ERCC92/ERCC92.gtf"
 
 
 
@@ -29,7 +29,7 @@ if [ ! -f "$fasta_in" ]; then
 fi
 
 
-# Append the ERCC annotations to the fast
+# Append the ERCC annotations to the fasta
 cat "$fasta_in" > "$fasta_ercc"
 cat "$ercc" >> "$fasta_ercc"
 
@@ -106,13 +106,13 @@ grep -Ff "${annotation}/gene_allowlist" "$gtf_in" \
 
 # Append the ERCC annotations
 
-# Append the ERCC annotations to the fast
+# Append the ERCC annotations to the gtf
 gtf_filtered_ercc="${annotation}/gencode.v38.primary_assembly.annotation.filtered.with_ERCC92.gtf"
 
 cat "$gtf_filtered" > "$gtf_filtered_ercc"
 cat "$ercc_gtf" >> "$gtf_filtered_ercc"
 
 # Build genome
-STAR   --runMode genomeGenerate   --runThreadN 12 --genomeDir /t1-data/project/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/STAR_2.7.7a_GENCODE_with_ERCC_filtered_GTF/ \
---genomeFastaFiles /t1-data/project/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/WholeGenomeFasta/GRCh38.primary_assembly_with_ERCC92.genome.fa     --sjdbGTFfile /t1-data/project/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/Annotation/gencode.v38.primary_assembly.annotation.filtered.with_ERCC92.gtf   --sjdbOverhang 149
+STAR   --runMode genomeGenerate   --runThreadN 12 --genomeDir /stopgap/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/STAR_2.7.9a_GENCODE_with_ERCC_filtered_GTF/ \
+--genomeFastaFiles /stopgap/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/WholeGenomeFasta/GRCh38.primary_assembly_with_ERCC92.genome.fa     --sjdbGTFfile /stopgap/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/Annotation/gencode.v38.primary_assembly.annotation.filtered.with_ERCC92.gtf   --sjdbOverhang 149
 
