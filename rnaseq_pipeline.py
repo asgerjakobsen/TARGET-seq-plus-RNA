@@ -248,6 +248,7 @@ def STARsolo(input_files, output_file):
     --soloMultiMappers Unique
     --limitOutSJcollapsed 10000000
     --outSAMtype BAM Unsorted
+    --outSAMunmapped Within
     --outSAMattributes NH HI AS nM RG GX GN
     --outFileNamePrefix %(outprefix)s
     && gzip 7_starsolo/Solo.out/Gene*/*/*
