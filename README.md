@@ -22,8 +22,10 @@ These need a file extension in the format: `R1_001.fastq.gz`.
 In the `pipeline.yml`, specify: `SE_demultiplexed`
 
 2. Paired-end reads where Read 1 is a cell barcode.
-These need a file extension in the format: `L00[1-4]_R[1-2]_001.fq.gz`.
+These need a file extension in the format: `_R[1-2]_001.fq.gz`.
 In the `pipeline.yml`, specify: `PE_barcoded`
+
+If FASTQ files are split by lane, the pipeline can merge them. In the `pipeline.yml`, specify: `lanes: split`
 
 
 ### Trimming
@@ -38,10 +40,24 @@ Reads will be split and named according to the barcode: "HTxxx".
 
 ### Mapping
 
+The pipeline maps using STAR. STAR needs a GTF with gene annotations for mapping and gene assignment. If using ERCC spike-ins, these need to be appended to the genome fasta file before building the STAR index.
 Currently mapping on a single read works.
 For paired-end reads where Read 1 is a cell barcode, please specify `mapping: read2` in the `pipeline.yml`.
-STAR and FeatureCounts need a GTF with gene annotations for mapping and gene assignment.
+
+### Counting
+
+Feature (gene) counting is done with either Featurecounts or STARsolo.
+For featurecounts, mapping is performed first in a separate step for each cell.
+For STARsolo, mapping and counting are performed in a single step for all cells. This is faster.
+
 
 ### Usage
+
+For Featurecounts:
 ```
-nohup python rnaseq_pipeline.py make full &
+nohup python rnaseq_pipeline.py make full_featurecounts &
+```
+For STARsolo:
+```
+nohup python rnaseq_pipeline.py make full_starsolo &
+```
