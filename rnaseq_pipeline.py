@@ -54,6 +54,7 @@ def trimming_SE(input_file, output_file):
     %(input_file)s
     > 2_trimmed/%(basename)s_trimming_report.txt
     '''
+    job_options = " -t 24:00:00"
     P.run(statement, job_queue=PARAMS['q'], job_threads=4)
 
 
@@ -77,6 +78,7 @@ def trimming_PE_merged(input_file, output_files):
     %(input_file)s
     %(input_file2)s
     > 2_trimmed/%(basename)s_trimming_report.txt'''
+    job_options = " -t 24:00:00"
     P.run(statement, job_queue=PARAMS['q'], job_threads=4)
 
 
@@ -103,6 +105,7 @@ def trimming_PE_split(input_file, output_files):
     %(input_file)s
     %(input_file2)s
     > %(outfile_prefix)s_trimming_report.txt'''
+    job_options = " -t 24:00:00"
     P.run(statement, job_queue=PARAMS['q'], job_threads=4)
     if P.get_params()["zap_files"]==1:
         IOTools.zap_file(input_file)
@@ -131,6 +134,7 @@ def star(input_file, output_file):
         --outSAMunmapped Within
         --outFileNamePrefix %(outprefix)s_
         | samtools view -bu | samtools sort -@ %(star_threads)s -o %(output_file)s'''
+        job_options = " -t 24:00:00"
         P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_total_memory = '30G')
         if P.get_params()["zap_files"]==1:
             IOTools.zap_file(input_file)
@@ -148,6 +152,7 @@ def star(input_file, output_file):
         --outSAMunmapped Within
         --outFileNamePrefix %(outprefix)s_
         | samtools view -bu | samtools sort -@ %(star_threads)s -o %(output_file)s'''
+        job_options = " -t 24:00:00"
         P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_total_memory = '30G')
         if P.get_params()["zap_files"]==1:
             IOTools.zap_file(input_file)
@@ -165,6 +170,7 @@ def star(input_file, output_file):
         --outSAMunmapped Within
         --outFileNamePrefix %(outprefix)s_
         | samtools view -bu | samtools sort -@ %(star_threads)s -o %(output_file)s'''
+        job_options = " -t 24:00:00"
         P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_total_memory = '30G')
         if P.get_params()["zap_files"]==1:
             IOTools.zap_file(input_file)
@@ -177,6 +183,7 @@ def star(input_file, output_file):
 @transform(star, suffix('.bam'), '.bam.bai')     
 def bam_index(input_file, output_file):
     statement = 'samtools index %(input_file)s -@ 1 2> %(output_file)s.log'
+    job_options = " -t 12:00:00"
     P.run(statement, job_queue=PARAMS['q'], job_threads=1, job_memory = '100M')
 
 
@@ -207,6 +214,7 @@ def count_reads(input_files, output_file):
     -a %(featurecounts_gtf)s -o %(output_file)s %(input_files_string)s
     %(featurecounts_options)s
     2> 5_featurecounts/featurecounts_log.txt'''
+    job_options = " -t 24:00:00"
     P.run(statement, job_queue=PARAMS['q'], job_threads=4, job_memory =PARAMS['featurecounts_memory'])
 
 
@@ -244,8 +252,9 @@ def STARsolo(input_files, output_file):
     --outFileNamePrefix %(outprefix)s
     && gzip 7_starsolo/Solo.out/Gene*/*/*
     && gzip 7_starsolo/Solo.out/SJ/*/[bm]*
-   '''
-    P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_memory ='10G')
+    '''
+    job_options = " -t 72:00:00"
+    P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_total_memory = '50G')
     if P.get_params()["zap_files"]==1:
         for x in range (0,len(input_files)):
             IOTools.zap_file(input_files[x])
@@ -257,6 +266,7 @@ def STARsolo(input_files, output_file):
 @transform(STARsolo, suffix('.out.bam'), '.sortedByCoord.out.bam')     
 def bam_sort_starsolo(input_file, output_file):
     statement = 'samtools sort -@ %(star_threads)s %(input_file)s  -o %(output_file)s'
+    job_options = " -t 24:00:00"
     P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_memory = '10G')
     if P.get_params()["zap_files"]==1:
         IOTools.zap_file(input_file)
@@ -264,6 +274,7 @@ def bam_sort_starsolo(input_file, output_file):
 @transform(bam_sort_starsolo, suffix('.bam'), '.bam.bai')     
 def bam_index_starsolo(input_file, output_file):
     statement = 'samtools index %(input_file)s -@ 1'
+    job_options = " -t 24:00:00"
     P.run(statement, job_queue=PARAMS['q'], job_threads=1, job_memory = '100M')
 
 
@@ -275,11 +286,13 @@ def bam_split(input_file, output_files):
     statement = '''samtools split -@ %(star_threads)s %(input_file)s  
     -f "7_starsolo/bam_split_by_cell/%%!.bam"
     '''
+    job_options = " -t 24:00:00"
     P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_memory = '10G')
 
 @transform(bam_split, suffix('.bam'), '.bam.bai')     
 def bam_split_index(input_file, output_file):
     statement = 'samtools index %(input_file)s -@ 1'
+    job_options = " -t 24:00:00"
     P.run(statement, job_queue=PARAMS['q'], job_threads=1, job_memory = '100M')
 
 
@@ -292,6 +305,7 @@ def bam_split_index(input_file, output_file):
 @merge(samtools_flagstat, '6_multiqc/multiqc_report.html')
 def multiqc(input_file, output_file):
     statement = '''multiqc . -o 6_multiqc'''
+    job_options = " -t 24:00:00"
     P.run(statement, job_queue=PARAMS['q'], job_memory = '8G')
 
 
@@ -300,6 +314,7 @@ def multiqc(input_file, output_file):
 @merge(STARsolo, '8_multiqc_starsolo/multiqc_report.html')
 def multiqc2(input_file, output_file):
     statement = '''multiqc . -o 8_multiqc_starsolo'''
+    job_options = " -t 24:00:00"
     P.run(statement, job_queue=PARAMS['q'], job_memory = '8G')
     
 @follows(mkdir('9_RSeQC'))
@@ -333,14 +348,14 @@ def Mapping_qc():
     pass
     
 @follows(Mapping_qc, count_reads, multiqc)
-def full():
+def full_featurecounts():
     pass
     
 @follows(Trimming, STARsolo)
 def starsolo():
     pass
 
-@follows(Trimming, STARsolo, multiqc2, RSeQC)
+@follows(Trimming, STARsolo, multiqc2)
 def full_starsolo():
     pass
 
