@@ -131,7 +131,7 @@ def star(input_file, output_file):
         --outSAMunmapped Within
         --outFileNamePrefix %(outprefix)s_
         | samtools view -bu | samtools sort -@ %(star_threads)s -o %(output_file)s'''
-        P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_memory = '30G')
+        P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_total_memory = '30G')
         if P.get_params()["zap_files"]==1:
             IOTools.zap_file(input_file)
     
@@ -148,7 +148,7 @@ def star(input_file, output_file):
         --outSAMunmapped Within
         --outFileNamePrefix %(outprefix)s_
         | samtools view -bu | samtools sort -@ %(star_threads)s -o %(output_file)s'''
-        P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_memory = '30G')
+        P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_total_memory = '30G')
         if P.get_params()["zap_files"]==1:
             IOTools.zap_file(input_file)
             IOTools.zap_file(read1)
@@ -165,7 +165,7 @@ def star(input_file, output_file):
         --outSAMunmapped Within
         --outFileNamePrefix %(outprefix)s_
         | samtools view -bu | samtools sort -@ %(star_threads)s -o %(output_file)s'''
-        P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_memory = '30G')
+        P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_total_memory = '30G')
         if P.get_params()["zap_files"]==1:
             IOTools.zap_file(input_file)
             IOTools.zap_file(read1)
@@ -209,6 +209,82 @@ def count_reads(input_files, output_file):
     2> 5_featurecounts/featurecounts_log.txt'''
     P.run(statement, job_queue=PARAMS['q'], job_threads=4, job_memory =PARAMS['featurecounts_memory'])
 
+
+##### STARsolo #####
+    
+@follows(mkdir('7_starsolo'))
+@follows(trimming_SE)
+@follows(trimming_PE_merged)
+@follows(trimming_PE_split)
+@follows(merge_lanes)
+@merge('2_trimmed/*/*R2.fq.gz', '7_starsolo/Aligned.out.bam')
+def STARsolo(input_files, output_file):
+    input_files_string = ','.join(input_files)
+    with IOTools.open_file('7_starsolo/manifest.tsv', "w") as outf:
+        for x in range (0,len(input_files)):
+            filename=str(input_files[x].split("/")[2])
+            sample = P.snip(filename, ".trimmed_R2.fq.gz")
+            line = input_files[x]  + "\t-\t" + sample + "\n" 
+            outf.write(line)
+    
+    outprefix =  "7_starsolo/" #P.snip(output_file, ".bam")
+    statement = '''STAR
+    --runThreadN %(star_threads)s
+    --genomeDir %(star_ref)s
+    --readFilesManifest 7_starsolo/manifest.tsv
+    --readFilesCommand zcat
+    --soloType SmartSeq   
+    --soloFeatures Gene GeneFull_Ex50pAS SJ
+    --soloUMIdedup NoDedup
+    --soloStrand Forward
+    --soloMultiMappers Unique
+    --limitOutSJcollapsed 10000000
+    --outSAMtype BAM Unsorted
+    --outSAMattributes NH HI AS nM RG GX GN
+    --outFileNamePrefix %(outprefix)s
+    && gzip 7_starsolo/Solo.out/Gene*/*/*
+    && gzip 7_starsolo/Solo.out/SJ/*/[bm]*
+   '''
+    P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_memory ='10G')
+    if P.get_params()["zap_files"]==1:
+        for x in range (0,len(input_files)):
+            IOTools.zap_file(input_files[x])
+        
+##     --readFilesIn %(input_files_string)s
+##     2> 7_starsolo/starsolo_log.txt'''
+##    --soloCellFilter None
+
+@transform(STARsolo, suffix('.out.bam'), '.sortedByCoord.out.bam')     
+def bam_sort_starsolo(input_file, output_file):
+    statement = 'samtools sort -@ %(star_threads)s %(input_file)s  -o %(output_file)s'
+    P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_memory = '10G')
+    if P.get_params()["zap_files"]==1:
+        IOTools.zap_file(input_file)
+
+@transform(bam_sort_starsolo, suffix('.bam'), '.bam.bai')     
+def bam_index_starsolo(input_file, output_file):
+    statement = 'samtools index %(input_file)s -@ 1'
+    P.run(statement, job_queue=PARAMS['q'], job_threads=1, job_memory = '100M')
+
+
+##### Velocyto #####
+
+@follows(mkdir('7_starsolo/bam_split_by_cell'))
+@split(bam_sort_starsolo, '7_starsolo/bam_split_by_cell/*.bam')     
+def bam_split(input_file, output_files):
+    statement = '''samtools split -@ %(star_threads)s %(input_file)s  
+    -f "7_starsolo/bam_split_by_cell/%%!.bam"
+    '''
+    P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_memory = '10G')
+
+@transform(bam_split, suffix('.bam'), '.bam.bai')     
+def bam_split_index(input_file, output_file):
+    statement = 'samtools index %(input_file)s -@ 1'
+    P.run(statement, job_queue=PARAMS['q'], job_threads=1, job_memory = '100M')
+
+
+
+
 ## Multiqc report ##
 
 @follows(count_reads, samtools_idxstat)
@@ -217,6 +293,35 @@ def count_reads(input_files, output_file):
 def multiqc(input_file, output_file):
     statement = '''multiqc . -o 6_multiqc'''
     P.run(statement, job_queue=PARAMS['q'], job_memory = '8G')
+
+
+@follows(STARsolo)
+#count_reads only there to specify it should be done at end
+@merge(STARsolo, '8_multiqc_starsolo/multiqc_report.html')
+def multiqc2(input_file, output_file):
+    statement = '''multiqc . -o 8_multiqc_starsolo'''
+    P.run(statement, job_queue=PARAMS['q'], job_memory = '8G')
+    
+@follows(mkdir('9_RSeQC'))
+@follows(bam_index_starsolo)
+@merge(STARsolo, '9_RSeQC/RSeQC.geneBodyCoverage.curves.pdf')
+def RSeQC(input_file, output_file):
+    statement = '''geneBody_coverage.py 
+    -r  %(rseqc_refgene)s
+    -i %(input_file)s
+    -o 9_RSeQC/RSeQC  
+    '''
+    P.run(statement, job_queue=PARAMS['q'], job_memory = '8G')    
+
+#     &&
+# junction_saturation.py 
+# -r %(featurecounts_gtf)s
+# -i %(input_file)s      
+# -o 9_RSeQC/RSeQC   &&
+# read_distribution.py 
+# -r %(featurecounts_gtf)s
+# -i %(input_file)s      
+# > 9_RSeQC/RSeQC.read_distribution.txt
 
 
 @follows(fastqc, trimming_SE, trimming_PE_merged, trimming_PE_split)
@@ -229,6 +334,14 @@ def Mapping_qc():
     
 @follows(Mapping_qc, count_reads, multiqc)
 def full():
+    pass
+    
+@follows(Trimming, STARsolo)
+def starsolo():
+    pass
+
+@follows(Trimming, STARsolo, multiqc2, RSeQC)
+def full_starsolo():
     pass
 
 if __name__=="__main__":

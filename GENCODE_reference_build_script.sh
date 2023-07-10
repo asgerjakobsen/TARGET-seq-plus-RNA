@@ -1,4 +1,6 @@
 #!/bin/bash
+#SBATCH --ntasks=10
+#SBATCH --mem=40G
 
 # Build notes for GENCODE reference
 # June 2021
@@ -113,6 +115,6 @@ cat "$gtf_filtered" > "$gtf_filtered_ercc"
 cat "$ercc_gtf" >> "$gtf_filtered_ercc"
 
 # Build genome
-STAR   --runMode genomeGenerate   --runThreadN 12 --genomeDir /stopgap/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/STAR_2.7.9a_GENCODE_with_ERCC_filtered_GTF/ \
+STAR   --runMode genomeGenerate   --runThreadN 10 --genomeDir /stopgap/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/STAR_2.7.9a_GENCODE_with_ERCC_filtered_GTF/ \
 --genomeFastaFiles /stopgap/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/WholeGenomeFasta/GRCh38.primary_assembly_with_ERCC92.genome.fa     --sjdbGTFfile /stopgap/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/Annotation/gencode.v38.primary_assembly.annotation.filtered.with_ERCC92.gtf   --sjdbOverhang 149
 

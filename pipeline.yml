@@ -24,16 +24,17 @@ cutadapt:
 # If PE_novogene the pipeline also needs a barcodes.fasta file with cell barcodes
 
 star:
-    threads: 1
-    ref: /stopgap/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/STAR_2.7.9a_GENCODE_with_ERCC_filtered_GTF
-    
-picard:
-    ref: /t1-data/project/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/WholeGenomeFasta/Homo_sapiens.GRCh38.dna.primary_assembly_with_ERCC92.fa
-        
+    threads: 10
+    ref: /project/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/STAR_2.7.9a_GENCODE_with_ERCC_filtered_GTF
+            
 featurecounts:
-    gtf: /stopgap/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/Annotation/gencode.v38.primary_assembly.annotation.filtered.with_ERCC92.gtf
+    gtf: /project/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/Annotation/gencode.v38.primary_assembly.annotation.filtered.with_ERCC92_v2.gtf
      # -s 1 means stranded couting
     options: --primary --extraAttributes gene_name -s 1
     # Memory needed is roughly 1/10th of the input fastq.qz size - 600Gb needs about 65G
     # This is per thread, so for 4 threads, it is a quarter
     memory: 20G
+
+rseqc:
+    refgene: /project/vyaslab/jakobsen/genomes/Homo_sapiens/UCSC/hg38/Annotation/hg38.HouseKeepingGenes.nochr.bed
+
