@@ -6,9 +6,11 @@ Created on Wed Jan  8 17:09:47 2020
 @author: jakobsen
 """
 
+import sys
+sys.path.insert(0, '/lib/libdrmaa.so')
+import drmaa
 from ruffus import *
 from cgatcore import pipeline as P
-import sys
 import os
 import cgatcore.iotools as IOTools
 
@@ -55,7 +57,7 @@ def trimming_SE(input_file, output_file):
     > 2_trimmed/%(basename)s_trimming_report.txt
     '''
     job_options = " -t 24:00:00"
-    P.run(statement, job_queue=PARAMS['q'], job_threads=4)
+    P.run(statement, job_queue=PARAMS['q'], job_threads=4, job_memory = '5G')
 
 
 ## PE_barcoded merged lanes: paired-end reads with file extension in the format: _R1_001.fastq.gz
@@ -79,7 +81,7 @@ def trimming_PE_merged(input_file, output_files):
     %(input_file2)s
     > 2_trimmed/%(basename)s_trimming_report.txt'''
     job_options = " -t 24:00:00"
-    P.run(statement, job_queue=PARAMS['q'], job_threads=4)
+    P.run(statement, job_queue=PARAMS['q'], job_threads=4, job_memory = '5G')
 
 
 ## PE_barcoded split lanes: paired-end reads with file extension in the format: _L001_R1_001.fastq.gz
@@ -106,7 +108,7 @@ def trimming_PE_split(input_file, output_files):
     %(input_file2)s
     > %(outfile_prefix)s_trimming_report.txt'''
     job_options = " -t 24:00:00"
-    P.run(statement, job_queue=PARAMS['q'], job_threads=4)
+    P.run(statement, job_queue=PARAMS['q'], job_threads=4, job_memory = '5G')
     if P.get_params()["zap_files"]==1:
         IOTools.zap_file(input_file)
         IOTools.zap_file(input_file2)
