@@ -1,4 +1,4 @@
-q: batch
+q: short
 
 # If zap_files: 1 then infiles for the function will deleted where specified
 zap_files: 1
