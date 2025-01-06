@@ -126,7 +126,7 @@ def trimming_PE_split(input_file, output_files):
 def star(input_file, output_file):
     outprefix = P.snip(output_file, ".bam")
     # SE mapping
-    if P.get_params()['mapping'] == "SE_demultiplexed":
+    if P.get_params()['input'] == "SE_demultiplexed":
         statement = '''STAR
         --runThreadN %(star_threads)s
         --genomeDir %(star_ref)s
@@ -142,7 +142,7 @@ def star(input_file, output_file):
             IOTools.zap_file(input_file)
     
     # SE mapping of PE_barcoded reads
-    elif P.get_params()['input'] == "PE_barcoded" and P.get_params()['mapping'] == "read2":
+    elif P.get_params()['input'] == "PE_barcoded":
         read1 = input_file.replace("_R2.fq.gz", "_R1.fq.gz")
         #basename = P.snip(os.path.basename(input_file),".trimmed_2.fq.gz").split("_")[0]
         statement = '''STAR
@@ -159,25 +159,7 @@ def star(input_file, output_file):
         if P.get_params()["zap_files"]==1:
             IOTools.zap_file(input_file)
             IOTools.zap_file(read1)
-            
-    # PE mapping
-    elif P.get_params()['input'] == "PE_barcoded" and P.get_params()['mapping'] == "both":
-        read1 = input_file.replace("_R2.fq.gz", "_R1.fq.gz")
-        statement = '''STAR
-        --runThreadN %(star_threads)s
-        --genomeDir %(star_ref)s
-        --readFilesIn %(read1)s %(input_file)s
-        --readFilesCommand zcat
-        --outStd SAM
-        --outSAMunmapped Within
-        --outFileNamePrefix %(outprefix)s_
-        | samtools view -bu | samtools sort -@ %(star_threads)s -o %(output_file)s'''
-        job_options = " -t 24:00:00"
-        P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_total_memory = '30G')
-        if P.get_params()["zap_files"]==1:
-            IOTools.zap_file(input_file)
-            IOTools.zap_file(read1)
-            
+                        
     else:
         print("Incorrect FASTQ input parameter")
 
