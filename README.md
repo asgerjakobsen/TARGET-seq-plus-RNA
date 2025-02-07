@@ -28,6 +28,8 @@ bash GENCODE_reference_build_script.sh
 
 ## Using the pipeline
 
+Optional parameters can be specified in the `pipeline.yml` file.
+
 ### Input files
 
 FASTQ files (or symlinks) need to be in a subdirectory called `fastq/` within the working directory where you are running the pipeline.
@@ -62,9 +64,9 @@ For paired-end reads where Read 1 is a cell barcode, please specify `mapping: re
 
 ### Counting
 
-Feature (gene) counting is done with either STARsolo or Featurecounts.
+Gene feature counting is done with either STARsolo or Featurecounts.
 For STARsolo, mapping and counting are performed in a single step for all cells. This is the fastest option.
-For featurecounts, mapping is performed first in a separate step for each cell.
+For Featurecounts, mapping is performed first in a separate step for each cell.
 
 
 ### Usage
@@ -77,3 +79,22 @@ For Featurecounts:
 ```
 nohup python rnaseq_pipeline.py make Featurecounts &
 ```
+
+### BAM files
+
+STARsolo generates a single BAM file for the whole dataset. 
+If separate BAM files are needed for single cells, the following command can be used:
+```
+nohup python rnaseq_pipeline.py make split_bam &
+```
+
+## Output
+
+1. Counts matrices: 
+    - STARsolo: `7_starsolo`
+    - Featurecounts: `5_featurecounts`
+2. BAM files:
+    - STARsolo: `7_starsolo`
+    - Featurecounts: `3_mapping`
+3. MultiQC report
+
