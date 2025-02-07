@@ -3,7 +3,7 @@
 """
 Created on Wed Jan  8 17:09:47 2020
 
-@author: jakobsen
+@author: Asger Jakobsen
 """
 
 import sys
@@ -39,8 +39,15 @@ def merge_lanes(input_files, output_file):
     
 ##### Trimming #####
 
-@follows(mkdir('2_trimmed'))
+# Cutadapt is used to trim cDNA reads for polyA tails, Nextera adapters and low-quality reads.
+# In addition, cutadapt can demultiplex using the 14 bp single-cell barcodes in Read 1 
+# if this has not already been done.
+
+# If single cells are already demultiplexed into separate FASTQ files use: SE_demultiplexed
+# If single cells are not already demultiplexed use: PE_barcoded
+
 ## SE_demultiplexed: single-end reads with file extension in the format: R1_001.fastq.gz
+@follows(mkdir('2_trimmed'))
 @active_if(P.get_params()['input'] == "SE_demultiplexed")
 @transform('fastq/*.fastq.gz', regex(r'fastq/(.*)_(.*)_R1_001.fastq.gz'), r'2_trimmed/\1/\1.trimmed.fq.gz')
 def trimming_SE(input_file, output_file):
@@ -117,6 +124,8 @@ def trimming_PE_split(input_file, output_files):
 
 ##### Mapping #####
 
+# Reads are mapped using STAR. This step is skipped if using STARsolo
+
 @follows(mkdir('3_mapping'))
 @follows(trimming_SE)
 @follows(trimming_PE_merged)
@@ -192,7 +201,7 @@ def samtools_flagstat(input_file, output_file):
 @follows(bam_index)
 @follows(mkdir('5_featurecounts'))
 @merge(star, '5_featurecounts/counts.txt')
-def count_reads(input_files, output_file):
+def featurecounts(input_files, output_file):
     input_files_string = ' '.join(input_files)
     statement = '''featureCounts -T 12 -t exon -g gene_id
     -a %(featurecounts_gtf)s -o %(output_file)s %(input_files_string)s
@@ -203,7 +212,9 @@ def count_reads(input_files, output_file):
 
 
 ##### STARsolo #####
-    
+
+# If using STARsolo, mapping and counting is performed in a single step
+
 @follows(mkdir('7_starsolo'))
 @follows(trimming_SE)
 @follows(trimming_PE_merged)
@@ -226,7 +237,7 @@ def STARsolo(input_files, output_file):
     --readFilesManifest 7_starsolo/manifest.tsv
     --readFilesCommand zcat
     --soloType SmartSeq   
-    --soloFeatures Gene GeneFull_Ex50pAS SJ
+    --soloFeatures %(star_soloFeatures)s
     --soloUMIdedup NoDedup
     --soloStrand Forward
     --soloMultiMappers Unique
@@ -235,8 +246,7 @@ def STARsolo(input_files, output_file):
     --outSAMunmapped Within
     --outSAMattributes NH HI AS nM RG GX GN
     --outFileNamePrefix %(outprefix)s
-    && gzip 7_starsolo/Solo.out/Gene*/*/*
-    && gzip 7_starsolo/Solo.out/SJ/*/[bm]*
+    && gzip 7_starsolo/Solo.out/*/*/*
     '''
     job_options = " -t 72:00:00"
     P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_total_memory = '50G')
@@ -244,9 +254,8 @@ def STARsolo(input_files, output_file):
         for x in range (0,len(input_files)):
             IOTools.zap_file(input_files[x])
         
-##     --readFilesIn %(input_files_string)s
-##     2> 7_starsolo/starsolo_log.txt'''
-##    --soloCellFilter None
+
+
 
 @transform(STARsolo, suffix('.out.bam'), '.sortedByCoord.out.bam')     
 def bam_sort_starsolo(input_file, output_file):
@@ -263,7 +272,9 @@ def bam_index_starsolo(input_file, output_file):
     P.run(statement, job_queue=PARAMS['q'], job_threads=1, job_memory = '100M')
 
 
-##### Velocyto #####
+##### Split BAM files #####
+
+# For splitting the STARsolo BAM file into single cell files
 
 @follows(mkdir('7_starsolo/bam_split_by_cell'))
 @split(bam_sort_starsolo, '7_starsolo/bam_split_by_cell/*.bam')     
@@ -285,8 +296,8 @@ def bam_split_index(input_file, output_file):
 
 ## Multiqc report ##
 
-@follows(count_reads, samtools_idxstat)
-#count_reads only there to specify it should be done at end
+@follows(featurecounts, samtools_idxstat)
+#featurecounts only there to specify it should be done at end
 @merge(samtools_flagstat, '6_multiqc/multiqc_report.html')
 def multiqc(input_file, output_file):
     statement = '''multiqc . -o 6_multiqc'''
@@ -295,34 +306,15 @@ def multiqc(input_file, output_file):
 
 
 @follows(STARsolo)
-#count_reads only there to specify it should be done at end
 @merge(STARsolo, '8_multiqc_starsolo/multiqc_report.html')
 def multiqc2(input_file, output_file):
     statement = '''multiqc . -o 8_multiqc_starsolo'''
     job_options = " -t 24:00:00"
     P.run(statement, job_queue=PARAMS['q'], job_memory = '8G')
     
-@follows(mkdir('9_RSeQC'))
-@follows(bam_index_starsolo)
-@merge(STARsolo, '9_RSeQC/RSeQC.geneBodyCoverage.curves.pdf')
-def RSeQC(input_file, output_file):
-    statement = '''geneBody_coverage.py 
-    -r  %(rseqc_refgene)s
-    -i %(input_file)s
-    -o 9_RSeQC/RSeQC  
-    '''
-    P.run(statement, job_queue=PARAMS['q'], job_memory = '8G')    
 
-#     &&
-# junction_saturation.py 
-# -r %(featurecounts_gtf)s
-# -i %(input_file)s      
-# -o 9_RSeQC/RSeQC   &&
-# read_distribution.py 
-# -r %(featurecounts_gtf)s
-# -i %(input_file)s      
-# > 9_RSeQC/RSeQC.read_distribution.txt
 
+# Commands for controlling which parts of the pipeline to run
 
 @follows(fastqc, trimming_SE, trimming_PE_merged, trimming_PE_split)
 def Trimming():
@@ -332,16 +324,16 @@ def Trimming():
 def Mapping_qc():
     pass
     
-@follows(Mapping_qc, count_reads, multiqc)
-def full_featurecounts():
+@follows(Mapping_qc, featurecounts, multiqc)
+def Featurecounts():
     pass
     
-@follows(Trimming, STARsolo)
+@follows(Trimming, STARsolo, multiqc2)
 def starsolo():
     pass
 
-@follows(Trimming, STARsolo, multiqc2)
-def full_starsolo():
+@follows(bam_split, bam_split_index)
+def split_bam():
     pass
 
 if __name__=="__main__":

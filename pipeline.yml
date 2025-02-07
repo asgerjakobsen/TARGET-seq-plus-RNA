@@ -5,11 +5,12 @@ q: short
 
 # File clean-up
 # If zap_files: 1 then infiles for the function will deleted where specified
+# This saves space by deleting intermediate files
 zap_files: 1
 
 # FASTQ input files
-# Links to fastq files need to be in a directory called "fastq\"
 
+# Links to fastq files need to be in a directory called "fastq\"
 # There are two options:
 # SE_demultiplexed: single-end reads which are already demultiplexed into single cells, with file extension in the format: R1_001.fastq.gz
 # PE_barcoded: paired-end reads where Read 1 is the cell barcode with file extension in the format: L00[1-4]_R[1-2]_001.fq.gz
@@ -17,18 +18,24 @@ input: PE_barcoded
 # Lanes: 'merged' or 'split'. If split, the pipeline will merge lanes
 lanes: merged
 
-
+# Trimming
 cutadapt:
+    # Name of the fasta file with list of cell barcodes
     barcodes: barcodes.fasta
+    # Quality score for trimming
     q: 15
+    # Other options
     options: --minimum-length :25 -e 0.15  --pair-filter=any
-# If PE_novogene the pipeline also needs a barcodes.fasta file with cell barcodes
 
 # Mapping
 star:
     threads: 6
+    # Path to the STAR genome index
     ref: /project/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/STAR_2.7.9a_GENCODE_with_ERCC_filtered_GTF
+    # Specify the genomic features collected by STARsolo
+    soloFeatures: Gene GeneFull_Ex50pAS SJ
             
+# Featurecounts
 featurecounts:
     gtf: /project/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/Annotation/gencode.v38.primary_assembly.annotation.filtered.with_ERCC92_v2.gtf
      # -s 1 means stranded couting
@@ -36,7 +43,4 @@ featurecounts:
     # Memory needed is roughly 1/10th of the input fastq.qz size - 600Gb needs about 65G
     # This is per thread, so for 4 threads, it is a quarter
     memory: 20G
-
-rseqc:
-    refgene: /project/vyaslab/jakobsen/genomes/Homo_sapiens/UCSC/hg38/Annotation/hg38.HouseKeepingGenes.nochr.bed
 

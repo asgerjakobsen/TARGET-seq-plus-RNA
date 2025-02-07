@@ -71,9 +71,9 @@ For featurecounts, mapping is performed first in a separate step for each cell.
 
 For STARsolo counting:
 ```
-nohup python rnaseq_pipeline.py make full_starsolo &
+nohup python rnaseq_pipeline.py make starsolo &
 ```
 For Featurecounts:
 ```
-nohup python rnaseq_pipeline.py make full_featurecounts &
+nohup python rnaseq_pipeline.py make Featurecounts &
 ```
