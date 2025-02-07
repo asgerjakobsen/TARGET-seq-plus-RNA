@@ -9,13 +9,14 @@
 genome="GRCh38"
 
 # Folders
-cd /stopgap/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38
+mkdir WholeGenomeFasta
+mkdir Annotation
 sequence="./WholeGenomeFasta"
 annotation="./Annotation"
 
 # ERCC
-ercc="/stopgap/vyaslab/jakobsen/genomes/ERCC92/ERCC92.fa"
-ercc_gtf="/stopgap/vyaslab/jakobsen/genomes/ERCC92/ERCC92.gtf"
+ercc="ERCC92/ERCC92.fa"
+ercc_gtf="ERCC92/ERCC92.gtf"
 
 
 
@@ -115,6 +116,6 @@ cat "$gtf_filtered" > "$gtf_filtered_ercc"
 cat "$ercc_gtf" >> "$gtf_filtered_ercc"
 
 # Build genome
-STAR   --runMode genomeGenerate   --runThreadN 10 --genomeDir /stopgap/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/STAR_2.7.9a_GENCODE_with_ERCC_filtered_GTF/ \
---genomeFastaFiles /stopgap/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/WholeGenomeFasta/GRCh38.primary_assembly_with_ERCC92.genome.fa     --sjdbGTFfile /stopgap/vyaslab/jakobsen/genomes/Homo_sapiens/Ensembl/GRCh38/Annotation/gencode.v38.primary_assembly.annotation.filtered.with_ERCC92.gtf   --sjdbOverhang 149
+STAR   --runMode genomeGenerate   --runThreadN 10 --genomeDir STAR_2.7.9a_GENCODE_with_ERCC_filtered_GTF/ \
+--genomeFastaFiles WholeGenomeFasta/GRCh38.primary_assembly_with_ERCC92.genome.fa     --sjdbGTFfile Annotation/gencode.v38.primary_assembly.annotation.filtered.with_ERCC92.gtf   --sjdbOverhang 149
 
