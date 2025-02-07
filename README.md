@@ -15,7 +15,7 @@ nohup conda env create -f conda/rnaseq_env.yml &
 
 3. Generate the GENCODE reference with ERCC spike-ins using the `GENCODE_reference_build_script.sh` script.
 
-This requires the ERCC seqeunces (`ERCC92.fa`) and GTF file (`ERCC92.gtf`).
+This requires the ERCC sequences (`ERCC92.fa`) and GTF file (`ERCC92.gtf`).
 The script will download the GENCODE reference assembly and GTF files and append the ERCC annotations. 
 It then filters the GTF file to include only protein coding genes and long non-coding RNAs.
 Finally it builds the STAR index.
@@ -91,10 +91,10 @@ nohup python rnaseq_pipeline.py make split_bam &
 ## Output
 
 1. Counts matrices: 
-    - STARsolo: `7_starsolo`
+    - STARsolo: `7_starsolo/Solo.out`
     - Featurecounts: `5_featurecounts`
 2. BAM files:
-    - STARsolo: `7_starsolo`
+    - STARsolo: `7_starsolo/Solo.out`
     - Featurecounts: `3_mapping`
 3. MultiQC report
 
