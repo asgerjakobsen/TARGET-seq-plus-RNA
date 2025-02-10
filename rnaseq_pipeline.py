@@ -324,7 +324,7 @@ def Mapping_qc():
 def Featurecounts():
     pass
     
-@follows(Trimming, STARsolo, multiqc2)
+@follows(Trimming, STARsolo, bam_sort_starsolo, bam_index_starsolo, multiqc2)
 def starsolo():
     pass
 
