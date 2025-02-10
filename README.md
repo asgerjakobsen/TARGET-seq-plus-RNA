@@ -34,6 +34,10 @@ Optional parameters can be specified in the `pipeline.yml` file.
 
 FASTQ files (or symlinks) need to be in a subdirectory called `fastq/` within the working directory where you are running the pipeline.
 
+The pipeline uses the basename of each FASTQ file as the library name when generating downstream files. This is everything before the first underscore "_".
+For example, for FASTQ files named `S5PL01-S5PL02_R[1-2]_001.fastq.gz`, the basename is "S5PL01-S5PL02", 
+and this will generate single-cell barcodes named "`S5PL01-S5PL02-HTxxx". 
+
 The pipeline can deal with two types of fastq files:
 1. Single-ended reads without inline barcodes (already demultiplexed).
 These need a file extension in the format: `R1_001.fastq.gz`.
