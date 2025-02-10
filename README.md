@@ -36,14 +36,14 @@ FASTQ files (or symlinks) need to be in a subdirectory called `fastq/` within th
 
 The pipeline uses the basename of each FASTQ file as the library name when generating downstream files. This is everything before the first underscore "_".
 For example, for FASTQ files named `S5PL01-S5PL02_R[1-2]_001.fastq.gz`, the basename is "**S5PL01-S5PL02**", 
-and this will generate single-cell barcodes named "**S5PL01-S5PL02-HTxxx**". 
+and this will generate single-cell barcodes named "**S5PL01-S5PL02_HTxxx**". 
 
 The pipeline can deal with two types of fastq files:
 1. Single-ended reads without inline barcodes (already demultiplexed).
-These need a file extension in the format: `R1_001.fastq.gz`.
+These need a file extension in the format: `_R1_001.fastq.gz`.
 In the `pipeline.yml`, specify: `SE_demultiplexed`
 
-2. Paired-end reads where Read 1 is a cell barcode.
+2. Paired-end reads where Read 1 is a cell barcode and Read 2 is the cDNA read.
 These need a file extension in the format: `_R[1-2]_001.fq.gz`.
 In the `pipeline.yml`, specify: `PE_barcoded`
 
@@ -62,9 +62,9 @@ Reads will be split and named according to the barcode: "HTxxx".
 
 ### Mapping
 
-The pipeline maps using STAR. STAR needs a GTF with gene annotations for mapping and gene assignment. If using ERCC spike-ins, these need to be appended to the genome fasta file before building the STAR index.
-Currently mapping on a single read works.
-For paired-end reads where Read 1 is a cell barcode, please specify `mapping: read2` in the `pipeline.yml`.
+The pipeline maps using STAR. STAR needs a custom index with gene annotations for mapping and gene assignment. 
+If using ERCC spike-ins, these need to be appended to the genome fasta file before building the STAR index (see above).
+
 
 ### Counting
 
@@ -99,10 +99,10 @@ If mapping for Featurecounts, separate BAM files are already generated for each 
 ## Output
 
 1. Counts matrices: 
-    - STARsolo: within `7_starsolo/Solo.out`
-    - Featurecounts: within `5_featurecounts`
+    - STARsolo: within `7_starsolo/Solo.out/`
+    - Featurecounts: within `5_featurecounts/`
 2. BAM files:
     - STARsolo: `7_starsolo/Aligned.sortedByCoord.out.bam`
-    - Featurecounts: within `3_mapping`
+    - Featurecounts: within `3_mapping/`
 3. MultiQC report
 
