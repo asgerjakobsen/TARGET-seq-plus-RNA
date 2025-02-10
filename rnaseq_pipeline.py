@@ -53,8 +53,6 @@ def merge_lanes(input_files, output_file):
 def trimming_SE(input_file, output_file):
     basename = P.snip(os.path.basename(input_file),"_R1_001.fastq.gz").split("_")[0]
     statement = '''mkdir 2_trimmed/%(basename)s &&
-    mkdir -p 3_mapping/%(basename)s &&
-    mkdir -p 4_mapping_qc/%(basename)s &&
     cutadapt --cores=0
     --nextseq-trim=%(cutadapt_q)s
     -a "A{20}N{80};min_overlap=3" -a AGCAACTCTGCGTTGATACCACTGCTT
@@ -75,8 +73,6 @@ def trimming_PE_merged(input_file, output_files):
     input_file2 = input_file.replace("_R1_001.fastq.gz", "_R2_001.fastq.gz")
     basename = P.snip(os.path.basename(input_file),"_R1_001.fastq.gz").split("_")[0]
     statement = '''mkdir 2_trimmed/%(basename)s &&
-    mkdir -p 3_mapping/%(basename)s &&
-    mkdir -p 4_mapping_qc/%(basename)s &&
     cutadapt --cores=4
     -g file:%(cutadapt_barcodes)s
     --nextseq-trim=%(cutadapt_q)s
@@ -102,8 +98,6 @@ def trimming_PE_split(input_file, output_files):
     basename = P.snip(os.path.basename(input_file),".merged_R1.fq.gz").split("_")[0]
     #lane_suffix = input_file,r"_(.*)_L00\d_R1.fq.gz").split("_")[0]
     statement = '''mkdir 2_trimmed/%(basename)s &&
-    mkdir -p 3_mapping/%(basename)s &&
-    mkdir -p 4_mapping_qc/%(basename)s &&
     cutadapt --cores=4
     -g file:%(cutadapt_barcodes)s
     --nextseq-trim=%(cutadapt_q)s
@@ -136,8 +130,8 @@ def star(input_file, output_file):
     outprefix = P.snip(output_file, ".bam")
     # SE mapping
     if P.get_params()['input'] == "SE_demultiplexed":
-        statement = '''STAR
-        --runThreadN %(star_threads)s
+        statement = '''mkdir -p 3_mapping/%(basename)s &&
+        STAR  --runThreadN %(star_threads)s
         --genomeDir %(star_ref)s
         --readFilesIn %(input_file)s
         --readFilesCommand zcat
@@ -154,8 +148,8 @@ def star(input_file, output_file):
     elif P.get_params()['input'] == "PE_barcoded":
         read1 = input_file.replace("_R2.fq.gz", "_R1.fq.gz")
         #basename = P.snip(os.path.basename(input_file),".trimmed_2.fq.gz").split("_")[0]
-        statement = '''STAR
-        --runThreadN %(star_threads)s
+        statement = '''mkdir -p 3_mapping/%(basename)s &&
+        STAR  --runThreadN %(star_threads)s
         --genomeDir %(star_ref)s
         --readFilesIn %(input_file)s
         --readFilesCommand zcat
@@ -186,7 +180,8 @@ def bam_index(input_file, output_file):
 @follows(mkdir('4_mapping_qc'))
 @transform(star, regex(r'3_mapping/(.*)/(.*).bam'), r'4_mapping_qc/\1/\2.idxstat')
 def samtools_idxstat(input_file, output_file):
-    statement = '''samtools idxstats %(input_file)s > %(output_file)s'''
+    statement = '''mkdir -p 4_mapping_qc/%(basename)s &&
+    samtools idxstats %(input_file)s > %(output_file)s'''
     P.run(statement, job_queue=PARAMS['q'], job_memory = '100M')
 
 @follows(bam_index, samtools_idxstat)
@@ -248,7 +243,7 @@ def STARsolo(input_files, output_file):
     --outFileNamePrefix %(outprefix)s
     && gzip 7_starsolo/Solo.out/*/*/*
     '''
-    job_options = " -t 72:00:00"
+    job_options = " -t 24:00:00"
     P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_total_memory = '50G')
     if P.get_params()["zap_files"]==1:
         for x in range (0,len(input_files)):
