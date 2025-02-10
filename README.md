@@ -99,10 +99,10 @@ If mapping for Featurecounts, separate BAM files are already generated for each 
 ## Output
 
 1. Counts matrices: 
-    - STARsolo: `7_starsolo/Solo.out`
-    - Featurecounts: `5_featurecounts`
+    - STARsolo: within `7_starsolo/Solo.out`
+    - Featurecounts: within `5_featurecounts`
 2. BAM files:
-    - STARsolo: `7_starsolo/Solo.out`
-    - Featurecounts: `3_mapping`
+    - STARsolo: `7_starsolo/Aligned.sortedByCoord.out.bam`
+    - Featurecounts: within `3_mapping`
 3. MultiQC report
 
