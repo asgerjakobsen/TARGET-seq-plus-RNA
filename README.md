@@ -86,11 +86,15 @@ nohup python rnaseq_pipeline.py make Featurecounts &
 
 ### BAM files
 
-STARsolo generates a single BAM file for the whole dataset. 
+STARsolo generates a single BAM file for the whole dataset, where the cell barcode is provided in the read group `RG` tag. 
+
 If separate BAM files are needed for single cells, the following command can be used:
 ```
 nohup python rnaseq_pipeline.py make split_bam &
 ```
+
+If mapping for Featurecounts, separate BAM files are already generated for each cell.
+
 
 ## Output
 
