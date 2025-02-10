@@ -241,7 +241,8 @@ def STARsolo(input_files, output_file):
     --outSAMunmapped Within
     --outSAMattributes NH HI AS nM RG GX GN
     --outFileNamePrefix %(outprefix)s
-    && gzip 7_starsolo/Solo.out/*/*/*
+    && gzip 7_starsolo/Solo.out/Gene*/*/*
+    && gzip 7_starsolo/Solo.out/SJ/*/[bm]*
     '''
     job_options = " -t 24:00:00"
     P.run(statement, job_queue=PARAMS['q'], job_threads=PARAMS['star_threads'], job_total_memory = '50G')
